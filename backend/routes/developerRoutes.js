@@ -1,4 +1,4 @@
- import express from 'express';
+import express from 'express';
 import { getAllDevelopers, getDeveloperProfile } from '../controllers/developerController.js';
 
 

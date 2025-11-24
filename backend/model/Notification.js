@@ -1,37 +1,47 @@
 import mongoose from "mongoose";
 
-const notificationSchema = new mongoose.Schema({
-  user: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User",
-    required: true
+const notificationSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    type: {
+      type: String,
+      enum: [
+        "like",
+        "comment",
+        "follow",
+        "collab_request",
+        "collab_accepted",
+        "removed_from_project",
+      ],
+      required: true,
+    },
+
+    postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
+    projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+
+    isRead: { type: Boolean, default: false },
   },
+  {
+    timestamps: true, // ⭐ REQUIRED
+  }
+);
 
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
-type: {
-  type: String,
-  enum: ["like", "comment", "follow", "collab_request", "collab_accepted", "removed_from_project"],
-  required: true
-},
+// ⭐ TTL index on createdAt (NOW IT WORKS)
+notificationSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 5 * 24 * 60 * 60 }
+);
 
-
-  postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
-  projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
-
-  isRead: { type: Boolean, default: false },
-
-  // ⏳ AUTO DELETE AFTER 5 DAYS
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    expires: 5 * 24 * 60 * 60, // 5 days
-  },
-
-});
-
-
-export default mongoose.models.Notification || mongoose.model("Notification", notificationSchema);
+export default mongoose.models.Notification ||
+  mongoose.model("Notification", notificationSchema);
