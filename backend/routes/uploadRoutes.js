@@ -1,23 +1,23 @@
-import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from "cloudinary";
 
-// Cloudinary config
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+router.post("/file", upload.single("file"), async (req, res) => {
+  try {
+    const result = await cloudinary.uploader.upload_stream(
+      { folder: "collab-project" },
+      (error, uploadResult) => {
+        if (error) return res.status(500).json({ error });
+
+        res.json({
+          message: "File uploaded",
+          url: uploadResult.secure_url
+        });
+      }
+    );
+
+    result.end(req.file.buffer);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Upload error" });
+  }
 });
-
-// Storage settings
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "collab-project-planner",
-    allowed_formats: ["jpg", "png", "jpeg", "webp"],
-  },
-});
-
-const upload = multer({ storage });
-
-export default upload;
