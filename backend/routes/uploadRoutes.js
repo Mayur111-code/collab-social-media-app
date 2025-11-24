@@ -1,13 +1,13 @@
 import express from "express";
 import upload from "../middleware/upload.js";
-import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/file", authMiddleware, upload.single("file"), (req, res) => {
+// PUBLIC file upload route — no auth needed
+router.post("/file", upload.single("file"), (req, res) => {
   res.json({
     message: "File uploaded",
-    url: req.file.path   // Cloudinary URL
+    url: req.file.path, // Cloudinary URL
   });
 });
 

@@ -12,27 +12,26 @@ const notificationSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+type: {
+  type: String,
+  enum: ["like", "comment", "follow", "collab_request", "collab_accepted", "removed_from_project"],
+  required: true
+},
 
-  type: {
-    type: String,
-    enum: ["like", "comment", "collab_request", "collab_accepted"],
-    required: true
+
+  postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+
+  isRead: { type: Boolean, default: false },
+
+  // ⏳ AUTO DELETE AFTER 5 DAYS
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 5 * 24 * 60 * 60, // 5 days
   },
 
-  postId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Post",
-    default: null
-  },
+});
 
-  projectId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Project",
-    default: null
-  },
-
-  isRead: { type: Boolean, default: false }
-
-}, { timestamps: true });
 
 export default mongoose.models.Notification || mongoose.model("Notification", notificationSchema);

@@ -1,5 +1,5 @@
 import User from "../model/User.js";
-
+import createNotification from "../utils/createNotification.js";
 // UPDATE USER PROFILE (Cloudinary supported)
 export const updateProfile = async (req, res) => {
   try {
@@ -56,9 +56,11 @@ export const getUserById = async (req, res) => {
 
 
 // Follow user
+
+
 export const followUser = async (req, res) => {
   try {
-    const meId = req.user.id; // from authMiddleware
+    const meId = req.user.id;
     const toFollowId = req.params.id;
 
     if (meId === toFollowId) {
@@ -70,23 +72,37 @@ export const followUser = async (req, res) => {
 
     if (!other) return res.status(404).json({ message: "User not found" });
 
-    // if already following
     if (other.followers.includes(meId)) {
       return res.status(400).json({ message: "Already following" });
     }
 
+    // Add follow
     other.followers.push(meId);
     me.following.push(toFollowId);
 
     await other.save();
     await me.save();
 
-    res.json({ message: "Followed", followersCount: other.followers.length });
+    // 🔥 CREATE FOLLOW NOTIFICATION
+    await createNotification({
+      user: toFollowId,        // notification goes TO this user
+      sender: meId,            // user who followed
+      type: "follow",          // we added this type
+      postId: null,            // not from post
+      projectId: null
+    });
+
+    res.json({ 
+      message: "Followed", 
+      followersCount: other.followers.length 
+    });
+
   } catch (err) {
     console.error("Follow error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // Unfollow user
 export const unfollowUser = async (req, res) => {

@@ -7,7 +7,8 @@ import {
   updatePost,
   deletePost,
   getPostsByUser,
-  deleteComment
+  deleteComment,
+  
 } from "../controllers/postController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -36,6 +37,8 @@ router.put("/like/:id", authMiddleware, likePost);
 // ADD COMMENT
 router.put("/comment/:id", authMiddleware, addComment);
 router.delete("/comment/:id/:commentId", authMiddleware, deleteComment);
+
+
 
 
 export default router;

@@ -40,3 +40,24 @@ export const markAllRead = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// DELETE NOTIFICATION
+export const deleteNotification = async (req, res) => {
+  try {
+    const noti = await Notification.findById(req.params.id);
+
+    if (!noti) return res.status(404).json({ message: "Notification not found" });
+
+    // sirf owner delete kar sakta hai
+    if (noti.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    await noti.deleteOne();
+
+    res.json({ message: "Notification deleted" });
+  } catch (err) {
+    console.error("Delete notification error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

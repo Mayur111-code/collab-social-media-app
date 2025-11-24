@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
-import { useState } from "react";
-import { FiMenu, FiX } from "react-icons/fi";
+import { useState, useEffect, useRef } from "react";
+import { FiMenu, FiX, FiSearch, FiPlus, FiBell, FiUser, FiHome, FiCompass, FiBriefcase, FiLogOut, FiTrendingUp } from "react-icons/fi";
+import { HiSparkles } from "react-icons/hi";
 import CreatePostModal from "./CreatePostModal";
-import API from "../api/axios";   // <-- IMPORTANT
+import API from "../api/axios";
+import { toast } from "react-toastify";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -13,12 +15,14 @@ export default function Navbar() {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
-
   const [open, setOpen] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(0);
+  const searchRef = useRef(null);
 
   const handleLogout = () => {
     dispatch(logout());
+    toast.success("Logged out successfully! 👋");
   };
 
   const handleSearch = async (text) => {
@@ -36,7 +40,43 @@ export default function Navbar() {
       setShowSearch(true);
     } catch (err) {
       console.log(err);
+      toast.error("Search failed. Please try again.");
     }
+  };
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearch(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch notifications count
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const { data } = await API.get("/notifications/unread-count");
+        setNotificationsCount(data.count || 0);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const clearSearch = () => {
+    setSearch("");
+    setResults([]);
+    setShowSearch(false);
   };
 
   return (
@@ -49,115 +89,251 @@ export default function Navbar() {
         />
       )}
 
-      <nav className="bg-white shadow-md fixed top-0 left-0 w-full z-50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-
-          {/* Logo */}
-          <Link to="/" className="text-2xl font-bold text-blue-600">
-            Collab
+      <nav className="bg-white/95 backdrop-blur-lg shadow-lg fixed top-0 left-0 w-full z-50 border-b border-gray-200/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          
+          {/* Logo & Brand */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-2.5 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
+              <HiSparkles className="text-xl" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                InfinaHub
+              </span>
+              <span className="text-xs text-gray-500 font-medium">Developer Community</span>
+            </div>
           </Link>
 
-          {/* Hamburger (Mobile) */}
-          <button
-            className="md:hidden text-2xl"
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <FiX /> : <FiMenu />}
-          </button>
-
-          {/* MAIN MENU */}
-          <div
-            className={`md:flex gap-6 items-center 
-            ${open ? "block" : "hidden"} md:block bg-white md:bg-transparent p-4 md:p-0`}
-          >
-            <Link to="/" className="block py-2 text-gray-700 hover:text-blue-600">
-              Home
-            </Link>
-
-            <Link to="/explore" className="block py-2 text-gray-700 hover:text-blue-600">
-              Explore
-            </Link>
-
-            <Link to="/projects" className="block py-2 text-gray-700 hover:text-blue-600">
-              Projects
-            </Link>
-
-            {/* SEARCH BAR */}
-            <div className="relative w-full md:w-64">
+          {/* Desktop Search Bar */}
+          <div className="hidden md:block relative w-96" ref={searchRef}>
+            <div className="relative">
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search developers..."
-                className="w-full px-3 py-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500"
+                placeholder="Search developers, projects, posts..."
+                className="w-full pl-12 pr-10 py-3 border border-gray-200 rounded-2xl bg-gray-50/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 backdrop-blur-sm"
               />
-
-            {/* SEARCH DROPDOWN */}
-{showSearch && (
-  <div className="absolute top-12 left-0 w-full bg-white shadow-lg rounded-lg max-h-64 overflow-y-auto z-50">
-
-    {/* No results message */}
-    {results.length === 0 ? (
-      <div className="px-4 py-3 text-gray-500 text-sm text-center">
-        No developers found
-      </div>
-    ) : (
-      results.map((u) => (
-        <Link
-          key={u._id}
-          to={`/profile/${u._id}`}
-          onClick={() => {
-            setShowSearch(false);
-            setSearch("");
-          }}
-          className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-        >
-          <img
-            src={u.avatar || "https://i.pravatar.cc/50"}
-            className="w-10 h-10 rounded-full"
-          />
-          <div>
-            <p className="font-semibold">{u.name}</p>
-            <p className="text-xs text-gray-500">
-              {u.skills?.slice(0, 3).join(", ") || "No skills"}
-            </p>
-          </div>
-        </Link>
-      ))
-    )}
-  </div>
-)}
-
+              {search && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
-            <Link to="/notifications" className="block py-2 text-gray-700 hover:text-blue-600">
-              Notifications
-            </Link>
+            {/* Search Dropdown */}
+            {showSearch && (
+              <div className="absolute top-16 left-0 w-full bg-white/95 backdrop-blur-lg shadow-2xl rounded-2xl max-h-80 overflow-y-auto z-50 border border-gray-200/50">
+                <div className="p-3 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <FiSearch className="w-4 h-4" />
+                    Search Results
+                  </p>
+                </div>
+                
+                {results.length === 0 ? (
+                  <div className="px-4 py-8 text-gray-500 text-center">
+                    <div className="text-4xl mb-3">🔍</div>
+                    <p className="font-medium text-gray-600">No results found</p>
+                    <p className="text-sm text-gray-400 mt-1">Try different keywords</p>
+                  </div>
+                ) : (
+                  results.map((u) => (
+                    <Link
+                      key={u._id}
+                      to={`/profile/${u._id}`}
+                      onClick={clearSearch}
+                      className="flex items-center gap-4 px-4 py-3 hover:bg-blue-50/50 cursor-pointer transition-all duration-200 border-b border-gray-100/50 last:border-b-0 group"
+                    >
+                      <img
+                        src={u.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                        className="w-12 h-12 rounded-full border-2 border-white shadow group-hover:scale-105 transition-transform duration-200"
+                        alt={u.name}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-800 truncate">{u.name}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {u.title || "Developer"} • {u.skills?.slice(0, 2).join(", ") || "No skills"}
+                        </p>
+                      </div>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
 
-            <Link
-              to={`/profile/${user?._id}`}
-              className="block py-2 text-gray-700 hover:text-blue-600"
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 px-4 py-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium group"
             >
-              Profile
+              <FiHome className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Home
             </Link>
 
-            {/* CREATE POST BUTTON */}
+            <Link 
+              to="/explore" 
+              className="flex items-center gap-2 px-4 py-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium group"
+            >
+              <FiCompass className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Explore
+            </Link>
+
+            <Link 
+              to="/projects" 
+              className="flex items-center gap-2 px-4 py-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium group"
+            >
+              <FiBriefcase className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Projects
+            </Link>
+
             <button
               onClick={() => setOpenCreate(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold ml-2"
             >
+              <FiPlus className="w-4 h-4" />
               Create
             </button>
 
-            {/* LOGOUT */}
+            {/* Notifications with Badge */}
+            <Link 
+              to="/notifications" 
+              className="relative p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group"
+            >
+              <FiBell className="text-xl group-hover:scale-110 transition-transform" />
+              {notificationsCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  {notificationsCount > 9 ? '9+' : notificationsCount}
+                </span>
+              )}
+            </Link>
+
+            {/* User Profile */}
+            <Link
+              to={`/profile/${user?._id}`}
+              className="flex items-center gap-3 p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group"
+            >
+              <img
+                src={user?.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                className="w-8 h-8 rounded-full border-2 border-white shadow group-hover:scale-110 transition-transform"
+                alt={user?.name}
+              />
+              <span className="font-medium text-sm max-w-24 truncate hidden lg:block">
+                {user?.name}
+              </span>
+            </Link>
+
             <button
               onClick={handleLogout}
-              className="mt-3 md:mt-0 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+              className="flex items-center gap-2 px-4 py-2.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 font-medium group"
             >
-              Logout
+              <FiLogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="hidden lg:block">Logout</span>
             </button>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {open && (
+          <div className="md:hidden bg-white/95 backdrop-blur-lg border-t border-gray-200/50 shadow-xl">
+            <div className="px-4 py-4 space-y-2">
+              
+              {/* User Info */}
+              <div className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-xl mb-2">
+                <img
+                  src={user?.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                  className="w-12 h-12 rounded-full border-2 border-white shadow"
+                  alt={user?.name}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-800 truncate">{user?.name}</p>
+                  <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+                </div>
+              </div>
+
+              {/* Mobile Search */}
+              <div className="relative mb-3">
+                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  placeholder="Search developers..."
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-50/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                />
+              </div>
+
+              {/* Mobile Menu Items */}
+              {[
+                { to: "/", icon: FiHome, label: "Home" },
+                { to: "/explore", icon: FiCompass, label: "Explore" },
+                { to: "/projects", icon: FiBriefcase, label: "Projects" },
+                { to: "/notifications", icon: FiBell, label: "Notifications", badge: notificationsCount },
+                { to: `/profile/${user?._id}`, icon: FiUser, label: "Profile" },
+              ].map(({ to, icon: Icon, label, badge }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="flex items-center gap-3 py-3 px-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium group"
+                  onClick={() => setOpen(false)}
+                >
+                  <div className="relative">
+                    <Icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    {badge > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {badge > 9 ? '9+' : badge}
+                      </span>
+                    )}
+                  </div>
+                  {label}
+                </Link>
+              ))}
+
+              {/* Action Buttons */}
+              <div className="pt-2 border-t border-gray-200/50 space-y-2">
+                <button
+                  onClick={() => {
+                    setOpenCreate(true);
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold"
+                >
+                  <FiPlus className="w-5 h-5" />
+                  Create Post
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 px-4 rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 font-semibold"
+                >
+                  <FiLogOut className="w-5 h-5" />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
     </>
   );

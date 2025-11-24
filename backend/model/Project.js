@@ -6,23 +6,37 @@ const projectSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+
   title: { type: String, required: true },
   description: { type: String, required: true },
-  tags: { type: [String], default: [] },
+
+  techStack: { type: [String], default: [] },   // ⭐ NEW
+  rolesRequired: { type: [String], default: [] },  // ⭐ NEW
+
   image: { type: String, default: "" },
 
-  // team members — IDs of users
+  // team members
   team: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   }],
+   teamSize: { type: Number, required: true },
 
-  // linked to post (optional)
-  postId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Post",
-    default: null
-  },
+  // ⭐ REQUEST LIST (Pending Requests)
+  requests: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      message: String,
+      status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" }
+    }
+  ],
+
+  // project status
+  status: {
+    type: String,
+    enum: ["open", "in-progress", "completed"],
+    default: "open"
+  }
 
 }, { timestamps: true });
 

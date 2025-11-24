@@ -3,9 +3,12 @@ import {
   createProject,
   getAllProjects,
   getProjectById,
-  addMember,
   updateProject,
-  deleteProject
+  deleteProject,
+  applyToProject,
+  acceptRequest,
+  rejectRequest,
+  removeMember
 } from "../controllers/projectController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -13,22 +16,85 @@ import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-// CREATE PROJECT (supports optional image upload)
-router.post("/create", authMiddleware, upload.single("file"), createProject);
+/* ---------------------------
+   CREATE PROJECT
+---------------------------- */
+router.post(
+  "/create",
+  authMiddleware,
+  upload.single("file"),
+  createProject
+);
 
-// UPDATE PROJECT (supports optional new image upload)
-router.put("/update/:id", authMiddleware, upload.single("file"), updateProject);
+/* ---------------------------
+   GET ALL PROJECTS
+---------------------------- */
+router.get(
+  "/all",
+  authMiddleware,
+  getAllProjects
+);
 
-// DELETE PROJECT
-router.delete("/delete/:id", authMiddleware, deleteProject);
+/* ---------------------------
+   GET PROJECT DETAILS
+---------------------------- */
+router.get(
+  "/:id",
+  authMiddleware,
+  getProjectById
+);
 
-// GET ALL PROJECTS
-router.get("/all", authMiddleware, getAllProjects);
+/* ---------------------------
+   UPDATE PROJECT
+---------------------------- */
+router.put(
+  "/update/:id",
+  authMiddleware,
+  upload.single("file"),
+  updateProject
+);
 
-// GET PROJECT DETAILS
-router.get("/:id", authMiddleware, getProjectById);
+/* ---------------------------
+   DELETE PROJECT
+---------------------------- */
+router.delete(
+  "/delete/:id",
+  authMiddleware,
+  deleteProject
+);
 
-// ADD TEAM MEMBER
-router.put("/add-member/:id", authMiddleware, addMember);
+/* ---------------------------
+   APPLY TO PROJECT
+---------------------------- */
+router.post(
+  "/apply/:id",
+  authMiddleware,
+  applyToProject
+);
+
+/* ---------------------------
+   ACCEPT REQUEST
+---------------------------- */
+router.put(
+  "/accept/:projectId/:requestId",
+  authMiddleware,
+  acceptRequest
+);
+
+/* ---------------------------
+   REJECT REQUEST
+---------------------------- */
+router.put(
+  "/reject/:projectId/:requestId",
+  authMiddleware,
+  rejectRequest
+);
+
+router.delete(
+  "/remove-member/:projectId/:userId",
+  authMiddleware,
+  removeMember
+);
+
 
 export default router;
