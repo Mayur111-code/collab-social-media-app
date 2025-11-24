@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": ">=18 <=20"
+  },
   "name": "backend",
   "version": "1.0.0",
   "description": "",
@@ -10,7 +13,7 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "cloudinary": "1.37.0",
+    "cloudinary": "^1.41.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",

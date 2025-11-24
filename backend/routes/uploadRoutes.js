@@ -1,18 +1,17 @@
 import express from "express";
 import upload from "../middleware/upload.js";
 import { v2 as cloudinary } from "cloudinary";
+import cors from "cors";
 
 const router = express.Router();
 
-router.post("/file", upload.single("file"), (req, res) => {
+router.post("/file", cors(), upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
   const buffer = req.file.buffer;
 
   const stream = cloudinary.uploader.upload_stream(
-    {
-      folder: "collab-project",
-    },
+    { folder: "collab-project" },
     (error, result) => {
       if (error) {
         console.error("Cloudinary error:", error);

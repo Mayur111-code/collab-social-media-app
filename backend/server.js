@@ -2,27 +2,32 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
+import cloudinary from "./config/cloudinary.js";   
 
+// Load env
 dotenv.config();
+
+// Connect DB
 connectDB();
 
 const app = express();
 
-
-
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://infinahub.web.app",   // ← ADD THIS
-    "https://infinahub.firebaseapp.com"  // ← ADD THIS TOO
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+// CORS
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://infinahub.web.app",
+      "https://infinahub.firebaseapp.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
-// ---------------- ROUTES ----------------
+// Routes
 import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import developerRoute from "./routes/developerRoutes.js";
@@ -33,7 +38,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
-// ⭐ Correct Order (Express 5 required)
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/developers", developerRoute);
@@ -41,24 +46,20 @@ app.use("/api/collab", collabRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/search", searchRoutes);   // put search before user
-app.use("/api/user", userRoutes);       // user last due to /:id
+app.use("/api/search", searchRoutes);
+app.use("/api/user", userRoutes);
 
-// Root route
+// Root
 app.get("/", (req, res) => {
   res.json({
     message: "Collab API Server Running",
     version: "1.0.0",
-    frontend: "https://infinahub.netlify.app"
+    frontend: "https://infinahub.web.app",
   });
 });
 
-// ⭐ NO wildcard (*), NO complicated CORS — Render safe!
-// DO NOT ADD app.use("*")
-
-// ⭐ Start Server
+// Start server
 const port = process.env.PORT || 5000;
-
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
 });
