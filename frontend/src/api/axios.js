@@ -3,9 +3,7 @@ import axios from "axios";
 // ⭐ Use production URL when deployed, localhost when running locally
 const API = axios.create({
   baseURL:
-    import.meta.env.PROD
-      ? "https://collab-backend-7sua.onrender.com/api"   // Render backend
-      : "http://localhost:5000/api",                     // Local backend
+     "http://localhost:3000/api",                     
 });
 
 // ⭐ Auto add token
