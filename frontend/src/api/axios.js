@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://collab-backend-rmwi.onrender.com/api",
+  baseURL: "https://collab-backend-rnwi.onrender.com/api",
 });
 
 API.interceptors.request.use((req) => {

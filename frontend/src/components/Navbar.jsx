@@ -56,28 +56,57 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch notifications count
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const { data } = await API.get("/notifications/unread-count");
-        setNotificationsCount(data.count || 0);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      }
-    };
+  // // Fetch notifications count
+  // useEffect(() => {
+  //   const fetchNotifications = async () => {
+  //     try {
+  //       const { data } = await API.get("/notifications/unread-count");
+  //       setNotificationsCount(data.count || 0);
+  //     } catch (error) {
+  //       console.error("Error fetching notifications:", error);
+  //     }
+  //   };
 
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  //   fetchNotifications();
+  //   // Poll for new notifications every 30 seconds
+  //   const interval = setInterval(fetchNotifications, 30000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
-  const clearSearch = () => {
-    setSearch("");
-    setResults([]);
-    setShowSearch(false);
+  // const clearSearch = () => {
+  //   setSearch("");
+  //   setResults([]);
+  //   setShowSearch(false);
+  // };
+
+
+  // Fetch notifications count safely
+useEffect(() => {
+  if (!user) {
+    setNotificationsCount(0);
+    return;
+  }
+
+  const fetchNotifications = async () => {
+    try {
+      // TEMP disabled since backend route not created yet
+      // const { data } = await API.get(`/notifications/unread-count/${user._id}`);
+      // setNotificationsCount(data.count);
+
+      setNotificationsCount(0);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      setNotificationsCount(0);
+    }
   };
+
+  fetchNotifications();
+
+  // Poll every 30 seconds
+  const interval = setInterval(fetchNotifications, 30000);
+
+  return () => clearInterval(interval);
+}, [user]);
 
   return (
     <>
