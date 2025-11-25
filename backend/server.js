@@ -16,9 +16,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "https://infinahub.web.app",
-      "https://infinahub.firebaseapp.com",
+      "collab-social-media-app.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
